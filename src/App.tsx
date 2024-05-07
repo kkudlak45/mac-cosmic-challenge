@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import './App.css'
 import { Answer, GEOCACHES, Geocache } from './caches'
 
 const API_URL = "https://g4jv1458b6.execute-api.us-east-1.amazonaws.com/test/checkCosmicCodeWord";
 const LS_KEY = "MAC_COSMIC_ANSWERS";
+const FINAL_GCCODE = "GCAQ52A"
 
 export default function App() {
   const answersString = localStorage.getItem(LS_KEY);
@@ -35,9 +36,20 @@ export default function App() {
       .catch((err) => console.error(err))
   }
 
+  const finalCoords = useMemo(() => {
+    const finalAnswer = answers.find((ans: Answer) => ans.gcCode === FINAL_GCCODE);
+    return finalAnswer?.answer;
+  }, [answers]);
+
   return (
-    <div>
+    <div id="main">
       <h2>MAC Cosmic Challenge</h2>
+      <p>Calling all astronauts, are you ready to embark on a new mission that is sure to be out of this world? Intergalactic caches have been spotted through the Mountaineer region and beyond, and we need your help tracking them down in the Cosmic Caching Challenge! Find 20 / 23 of the following caches and input the corresponding code words to locate the bonus cache ({FINAL_GCCODE}).</p>
+      {finalCoords && (
+        <p style={{ fontSize: "24px", fontWeight: "bold" }}>
+          CONGRATS! {FINAL_GCCODE} IS AT {finalCoords}
+        </p>
+      )}
       <form onSubmit={onSubmit}>
         {GEOCACHES.map((cache: Geocache) => {
           const thisAnswer = answers?.find((answer: Answer) => answer.gcCode === cache.gcCode);
@@ -51,7 +63,14 @@ export default function App() {
                 marginBottom: "4px"
               }}
             >
-              <label style={{ color: thisAnswer?.correct ? "green" : "red" }} htmlFor={cache.gcCode}>
+              <label
+                htmlFor={cache.gcCode}
+                style={{
+                  color: thisAnswer?.correct ? "green" : "red",
+                  fontWeight: "bold",
+                  textAlign: "left",
+                }}
+              >
                 {`${cache.gcCode} - ${cache.name}`}
               </label>
               <input type="text" id={cache.gcCode} defaultValue={thisAnswer?.answer}/>
